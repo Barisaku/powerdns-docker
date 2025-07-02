@@ -22,6 +22,6 @@ https://github.com/PowerDNS-Admin/PowerDNS-Admin
 2. `compose.yaml`ファイルのBuildのコメントを外して、imageをコメントアウト
 3. `docker compose build`でビルドする。
 
-※ RaspberryPi上でビルドするとスペック不足に陥ることがあるので、Buildxなどで事前にArm版のImageをビルドしておくことをおすすめします。　　
+※ RaspberryPi上でビルドするとスペック不足に陥ることがあるので、Buildxなどで事前にArm版のImageをビルドしておくことをオススメします。　　
 
 ※ 私の場合PowerDNS-Adminのビルドで失敗し、Dockerfileの`BUILD_DEPENDENCIES`に`py3-pip`を追加してあげることで解決できた。
