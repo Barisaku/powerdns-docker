@@ -1,1 +1,0 @@
--- addNTA('example.jp')

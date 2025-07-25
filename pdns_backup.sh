@@ -18,7 +18,6 @@ docker run --rm -v pdns_powerdns_web:/data -v "$WORKDIR:/backup" alpine \
 
 # Copy config and env files
 cp -r /root/pdns/conf "$WORKDIR/conf"
-cp /root/pdns/api-key.env "$WORKDIR/"
 
 # Create final archive
 mkdir -p "$BACKUP_BASE"

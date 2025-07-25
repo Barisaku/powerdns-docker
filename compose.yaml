@@ -1,36 +1,26 @@
----
 services:
   recursor:
-    # build:
-    #   context: ./pdns/
-    #   dockerfile: ./Dockerfile-recursor
-    image: barisaku/pdns-recursor:latest
+    image: powerdns/pdns-recursor-52:5.2.4
     container_name: pdns_recursor
     restart: always
-    env_file:
-      - api-key.env
     ports:
-      - "53:53"
-      - "53:53/udp"
       - "8082:8082"
     volumes:
-      - ./conf/recursor.conf:/etc/powerdns/recursor.d/recursor.conf:ro
+      - ./conf/recursor.yml:/etc/powerdns/recursor.d/recursor.yml:ro
     networks:
       powerdns:
         ipv4_address: 172.23.0.2
+      direct_lan:
+        ipv4_address: 192.168.0.53
+        ipv6_address: fd00::53
 
   auth:
-    # build:
-    #   context: ./pdns/
-    #   dockerfile: ./Dockerfile-auth
-    image: barisaku/pdns-auth:latest
+    image: powerdns/pdns-auth-49:4.9.7
     container_name: pdns_auth
     restart: always
-    env_file:
-      - api-key.env
+    environment:
+      PDNS_AUTH_API_KEY: XXXXXXXXXXXXXX
     ports:
-      - "1053:53"
-      - "1053:53/udp"
       - "8081:8081"
     volumes:
       - powerdns_auth:/var/lib/powerdns
@@ -38,16 +28,16 @@ services:
     networks:
       powerdns:
         ipv4_address: 172.23.0.3
+      direct_lan:
+        ipv4_address: 192.168.0.52
+        ipv6_address: fd00::52
 
   webapp:
-    # build:
-    #   context: ./PowerDNS-Admin/
-    #   dockerfile: ./docker/Dockerfile
-    image: barisaku/pdns-admin:latest
+    image: powerdnsadmin/pda-legacy:latest
     container_name: pdns_admin
     restart: always
     ports:
-      - "9191:80"
+      - "9191:80" #
     logging:
       driver: json-file
       options:
@@ -62,17 +52,49 @@ services:
       powerdns:
         ipv4_address: 172.23.0.4
 
+  webapp1:
+    image: powerdnsadmin/pda-legacy:latest
+    container_name: pdns_admin_slave
+    restart: always
+    ports:
+      - "9192:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+    environment:
+      - GUNICORN_TIMEOUT=60
+      - GUNICORN_WORKERS=2
+      - GUNICORN_LOGLEVEL=DEBUG
+    volumes:
+      - powerdns_web1:/data
+    networks:
+      powerdns:
+        ipv4_address: 172.23.0.5
+
 volumes:
   powerdns_auth:
     driver: local
   powerdns_web:
+    driver: local
+  powerdns_web1:
     driver: local
 
 networks:
   powerdns:
     driver: bridge
     ipam:
-      driver: default
       config:
         - subnet: 172.23.0.0/16
           gateway: 172.23.0.1
+
+  direct_lan:
+    driver: macvlan
+    driver_opts:
+      parent: eth0
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+          gateway: 192.168.0.1
+        - subnet: fd00::/64
